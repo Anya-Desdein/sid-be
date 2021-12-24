@@ -7,9 +7,20 @@ class Storage {
     this.pool = new Pool();
   }
 
-  async getSensorList() {
+  async getSensorInfoAll() {
     const { rows } = await this.pool.query(
       `SELECT "id", "type", "displayName", "latestValue", "latestReadingDate" FROM sensors`
+    );
+    return rows;
+  }
+
+  async getSensorInfo(idList) {
+    if(!idList || !idList.length)
+      return await this.getSensorInfoAll();
+
+    const { rows } = await this.pool.query(
+      `SELECT "id", "type", "displayName", "latestValue", "latestReadingDate" FROM sensors WHERE id = ANY($1::character varying[])`,
+      [ idList ]
     );
     return rows;
   }

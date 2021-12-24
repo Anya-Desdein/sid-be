@@ -10,8 +10,10 @@ const port = 3030;
 
 const storage = new Storage();
 
-app.get('/api/get-sensor-list', async (req, res) => {
-  const sensors = await storage.getSensorList();
+app.get('/api/get-sensor-list/:sensorIds?', async (req, res) => {
+  const { sensorIds } = req.params;
+  const sensorIdsArray = sensorIds ? sensorIds.split(",") : [];
+  const sensors = await storage.getSensorInfo(sensorIdsArray);
   res.json({
     sensors,
   });
