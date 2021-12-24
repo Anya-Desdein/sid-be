@@ -1,7 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const Storage = require('../sid-db-connector');
 
 const app = express();
+
+app.use(cors());
+
 const port = 3030;
 
 const storage = new Storage();
