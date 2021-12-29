@@ -1,4 +1,4 @@
-const Storage = require('../sid-db-connector');
+const Storage = require('../../sid-db-connector');
 const storage = new Storage();
 
 function errorsHandled(fn) {
