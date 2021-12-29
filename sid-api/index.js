@@ -1,49 +1,24 @@
+// load .env file into process.env
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const Storage = require('../sid-db-connector');
+const routes = require('./routes');
 
+// expressjs docs: https://expressjs.com/en/starter/hello-world.html
 const app = express();
 
+// CORS middleware to allow foreign requests
 app.use(cors());
 
-const port = 3030;
+// Set up routes
+routes(app);
 
-const storage = new Storage();
+// process.env: https://nodejs.org/api/process.html#processenv
+const port = parseInt(process.env.HTTP_PORT, 10) || 3030;
+const host = process.env.HTTP_HOST || 'localhost';
 
-app.get('/api/get-sensor-list/:sensorIds?', async (req, res) => {
-  const { sensorIds } = req.params;
-  const sensorIdsArray = sensorIds ? sensorIds.split(",") : [];
-  const sensors = await storage.getSensorInfo(sensorIdsArray);
-  res.json({
-    sensors,
-  });
-});
-
-app.get('/api/get-device-list', async (req, res) => {
-  const devices = await storage.getDeviceList();
-  res.json({
-    devices,
-  });
-});
-
-app.post('/api/set-device-state/:sensorId/:state', async (req, res) => {
-  const { sensorId, state } = req.params;
-  let parsedState;
-  if(state === "true") parsedState = true;
-  else if(state === "false") parsedState = false;
-  else if(state === "null") parsedState = null;
-  else {
-    return res.json({ error: 'Invalid "state" parameter' });
-  }
-
-  try {
-    await storage.setDeviceStatus(sensorId, parsedState);
-    res.json({ ok: true });
-  }catch(e) {
-    res.json({ error: String(e) });
-  }
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+// Start server
+app.listen(port, host, () => {
+  console.log(`Example app listening at http://${host}:${port}`);
 });

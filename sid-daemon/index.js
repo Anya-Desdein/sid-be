@@ -1,25 +1,23 @@
+// load .env file into process.env
+require('dotenv').config();
 
-const Storage = require('../sid-db-connector');
-
-const storage = new Storage();
+const loop = require('./loop');
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
-}
-
-async function loop() {
-  console.log("loop...")
 }
 
 async function main() {
   console.log(new Date(), "Daemon starting.")
   while(true) {
     try {
-      await loop();
-      await sleep(1000);
+      const start = process.hrtime.bigint();
+      const ret = await loop();
+      console.log(new Date(), `Daemon loop took ${(process.hrtime.bigint() - start)/1000n} us`, ret);
+      await sleep(2500);
     }catch(e) {
       console.error(new Date(), "Main loop error", e);
-      await sleep(5000);
+      await sleep(10000);
     }
   }
 }

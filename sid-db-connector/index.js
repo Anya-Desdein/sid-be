@@ -25,6 +25,37 @@ class Storage {
     return rows;
   }
 
+  async getSensorHistory(sensorId, from = null, to = null) {
+    if(to && from && from > to) {
+      throw '"from" must be before "to"';
+    }
+
+    let query, args;
+
+    if(!to && !from) {
+      query = `SELECT "value", "readingDate" FROM sensor_history WHERE "sensorId" = $1 ORDER BY "readingDate" DESC`;
+      args = [ sensorId ];
+
+    }else if(!to && from) {
+      query = `SELECT "value", "readingDate" FROM sensor_history WHERE "sensorId" = $1 AND "readingDate" > $2 ORDER BY "readingDate" DESC`;
+      args = [ sensorId, from ];
+
+    }else if(to && !from) {
+      query = `SELECT "value", "readingDate" FROM sensor_history WHERE "sensorId" = $1 AND "readingDate" < $2 ORDER BY "readingDate" DESC`;
+      args = [ sensorId, to ];
+
+    }else if(to && from) {
+      query = `SELECT "value", "readingDate" FROM sensor_history WHERE "sensorId" = $1 AND "readingDate" > $2 AND "readingDate" < $3 ORDER BY "readingDate" DESC`;
+      args = [ sensorId, from, to ];
+
+    }else{
+      throw 'unexpected state';
+    }
+
+    const { rows } = await this.pool.query(query, args);
+    return rows;
+  }
+
   async getDeviceList() {
     const { rows } = await this.pool.query(
       `SELECT "id", "displayName", "currentState", "overrideState" FROM output_devices`
