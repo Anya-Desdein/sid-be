@@ -8,6 +8,9 @@ CREATE TABLE public.output_devices
     CONSTRAINT output_devices_pkey PRIMARY KEY (id)
 )
 
+-- tabela sensors jest zdenormalizowana przez
+-- posiadanie wartoci latestValue i latestReadingDate
+-- dla szybszego odczytu z tabeli sensors
 CREATE TABLE public.sensors
 (
     "id" character varying(64) NOT NULL,
