@@ -3,8 +3,11 @@ const axios = require('axios').default;
 
 const latestReadingIds = new Map();
 
+const sensorHubEndpointUrl = process.env.SENSOR_HUB_URL;
+if(!sensorHubEndpointUrl) throw 'SENSOR_HUB_URL environment variable not set!';
+
 async function arduinoLoop() {
-  const { data: sensors } = await axios.get('http://sid-sensor-hub.local/get-sensor-values');
+  const { data: sensors } = await axios.get(sensorHubEndpointUrl);
 
   sensors.forEach(sensor => {
     // mark already collected readings
