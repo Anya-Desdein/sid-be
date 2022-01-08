@@ -1,6 +1,8 @@
 
 const Storage = require('../../sid-db-connector');
 const storage = new Storage();
+const arduinoLoop = require('./arduino-loop');
+
 
 const availableDeviceConnectors = {
   "tapo-plug": require('../../hw-connector-tapo'),
@@ -13,6 +15,7 @@ const plug = new availableDeviceConnectors['tapo-plug']({
 });
 
 async function loop(addBlockingAction) {
+  await arduinoLoop();
   // return (await storage.getSensorInfoAll()).map(({id}) => id);
   // const from = new Date('2021-12-29T18:40:20.500Z');
   // const to = null; //new Date('2021-12-29T18:42:20.500Z');

@@ -27,6 +27,9 @@ void SensorManager::writeSensor(String& response, const SensorEntry& entry, uint
   response += ", ";
   writeQuoted(response, "lastUpdateAgo", ": ");
   response += timeAgo / 1000.0f;
+  response += ", ";
+  writeQuoted(response, "readingId", ": ");
+  response += (entry.lastUpdatedMillis & 0xffffff00) | entry.localId;
 }
 
 SensorManager::SensorManager(uint32_t baseId) : baseId(baseId) {
@@ -36,7 +39,7 @@ SensorManager::SensorManager(uint32_t baseId) : baseId(baseId) {
 
   for(size_t i = 0; i < MAX_SENSOR_COUNT; i++) {
     sensors[i] = SensorEntry {
-      i + 1, ~0, false, false, "", 0.0f,
+      i + 1, ~0, false, false, "n/a", 0.0f,
     };
   }
 }

@@ -4,10 +4,12 @@
 #include <ESP8266mDNS.h>
 #include "Sensors.h"
 
+#define SERIAL_BAUD_RATE 115200
+// #define SERIAL_BAUD_RATE 74880
 #define MDNS_HOSTNAME "sid-sensor-hub"
 
-const char* ssid = "Orange_Swiatlowod_379C";
-const char* password = "vtWw93ZDjoMGoyvhWy";
+const char* ssid = "Babel24";
+const char* password = "sharkleCarrot749";
 
 ESP8266WebServer server(80);
 SensorManager* sm = nullptr;
@@ -39,7 +41,7 @@ void handleDebug() {
 void setup() {
   pinMode(led, OUTPUT);
   digitalWrite(led, 1);
-  Serial.begin(74880);
+  Serial.begin(SERIAL_BAUD_RATE);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.println("");
