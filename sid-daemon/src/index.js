@@ -3,19 +3,26 @@ require('dotenv').config();
 
 const loop = require('./loop');
 
+const sensorInit = require('./sensor-init');
+
 const blockingActionsLoopTimeoutSeconds = 5;
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+const deviceConfig = new Map();
+
 async function main() {
+  // Init sensors and devices from app-config.json
+  await sensorInit(deviceConfig);
+
   console.log(new Date(), "Daemon starting.")
   while(true) {
     try {
       const start = process.hrtime.bigint();
       const blockingActionList = [];
-      const ret = await loop(promise => blockingActionList.push(promise));
+      const ret = await loop(promise => blockingActionList.push(promise), deviceConfig);
       console.log(new Date(), `Daemon loop took ${(process.hrtime.bigint() - start)/1000n} us`, ret);
       
       await sleep(500);

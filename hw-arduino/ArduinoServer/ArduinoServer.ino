@@ -95,7 +95,7 @@ void setup() {
 
 unsigned long lastSensorCheck = ~0;
 void loop() {
-  unsigned long currentTime = millis();
+  uint32_t currentTime = millis();
   if(lastSensorCheck > currentTime || currentTime > lastSensorCheck + 5000) {
     sm->handleSensorsRefresh(currentTime);
     lastSensorCheck = millis();

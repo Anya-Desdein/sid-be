@@ -2,6 +2,8 @@ const { Pool } = require('pg');
 
 // Uses environment variables https://www.postgresql.org/docs/9.1/libpq-envars.html
 
+// Postresql requires fields with upper case names to be quoted e.g. "latestValue"
+
 class Storage {
   constructor() {
     this.pool = new Pool();
@@ -15,8 +17,16 @@ class Storage {
 
   async checkSensorIdExists(sensorId, client = null) {
     const { rows } = await (client ? client : this.pool).query(
-      `SELECT 1 FROM output_devices WHERE "id" = $1`,
+      `SELECT 1 FROM sensors WHERE "id" = $1`,
       [ sensorId ]
+    );
+    return rows && rows.length;
+  }
+
+  async checkDeviceIdExists(deviceId, client = null) {
+    const { rows } = await (client ? client : this.pool).query(
+      `SELECT 1 FROM output_devices WHERE "id" = $1`,
+      [ deviceId ]
     );
     return rows && rows.length;
   }
@@ -42,12 +52,14 @@ class Storage {
   async addSensor(sensorId, type, displayName) {
     this.validateSensorIdFormat(sensorId);
 
-    if(await this.checkSensorIdExists(sensorId, client)) {
-      throw new Error('Sensor already exists: ' + sensorId);
+    if(await this.checkSensorIdExists(sensorId)) {
+      const err = new Error('Sensor already exists: ' + sensorId);
+      err.alreadyExistsError = true;
+      throw err;
     }
     
-    const { rowCount: insertRowCount } = await client.query(
-      `INSERT INTO sensors(id, type, displayName) VALUES ($1, $2, $3)`,
+    const { rowCount: insertRowCount } = await this.pool.query(
+      `INSERT INTO sensors(id, type, "displayName") VALUES ($1, $2, $3)`,
       [ sensorId, type, displayName ]
     );
 
@@ -56,7 +68,26 @@ class Storage {
     }
   }
 
-  async addSensorValue(sensorId, value) {
+  async addOutputDevice(deviceId, displayName) {
+    this.validateSensorIdFormat(deviceId);
+
+    if(await this.checkDeviceIdExists(deviceId)) {
+      const err = new Error('Device already exists: ' + deviceId);
+      err.alreadyExistsError = true;
+      throw err;
+    }
+    
+    const { rowCount: insertRowCount } = await this.pool.query(
+      `INSERT INTO output_devices(id, "displayName") VALUES ($1, $2)`,
+      [ deviceId, displayName ]
+    );
+
+    if(insertRowCount === 0) {
+      throw new Error("Could not create sensor with id: " + deviceId);
+    }
+  }
+
+  async addSensorValue(sensorId, value, addHistoryRecord = false) {
     this.validateSensorIdFormat(sensorId);
     
     if(typeof value !== "number" || isNaN(value)) {
@@ -89,13 +120,15 @@ class Storage {
         throw new Error("Could not update sensor value for sensor: " + sensorId);
       }
 
-      const { rowCount: insertRowCount } = await client.query(
-        `INSERT INTO sensor_history(sensorId, value, readingDate) VALUES ($1, $2, $3)`,
-        [ sensorId, value, readingDate ]
-      );
-      
-      if(insertRowCount === 0) {
-        throw new Error("Could not insert sensor history value for sensor: " + sensorId);
+      if(addHistoryRecord) {
+        const { rowCount: insertRowCount } = await client.query(
+          `INSERT INTO sensor_history("sensorId", value, "readingDate") VALUES ($1, $2, $3)`,
+          [ sensorId, value, readingDate ]
+        );
+        
+        if(insertRowCount === 0) {
+          throw new Error("Could not insert sensor history value for sensor: " + sensorId);
+        }
       }
 
       await client.query('COMMIT');

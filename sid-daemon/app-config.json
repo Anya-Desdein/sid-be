@@ -1,0 +1,27 @@
+{
+  "sensors": [
+    {
+      "id": "14905677-3",
+      "type": "TEMP",
+      "displayName": "Temp1Room1"
+    },
+    {
+      "id": "14905677-4",
+      "type": "HUMI",
+      "displayName": "Hum1Room1"
+    }
+  ],
+
+  "outputDevices": [
+    {
+      "id": "PLUG-1",
+      "displayName": "Heater Bedroom",
+      "deviceData": {
+        "driver": "hw-connector-tapo",
+        "address": "192.168.xxxx",
+        "username": "xxxxx",
+        "password": "xxxxx"
+      }
+    }
+  ]
+}
