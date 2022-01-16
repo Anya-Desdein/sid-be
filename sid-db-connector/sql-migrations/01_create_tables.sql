@@ -3,6 +3,8 @@ CREATE TABLE public.output_devices
 (
     "id" character varying(64) NOT NULL,
     "displayName" character varying(120) NOT NULL,
+    "controllerId" character varying(120),
+    "controllerData" character varying(16000),
     "currentState" boolean,
     "overrideState" boolean,
     CONSTRAINT output_devices_pkey PRIMARY KEY (id)

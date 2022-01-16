@@ -21,6 +21,21 @@
         "address": "192.168.xxxx",
         "username": "xxxxx",
         "password": "xxxxx"
+      },
+      "controllerId": "plug1-room1temp-210616012022",
+      "controllerData": {
+        "controller": "pid",
+        "sensor": "14905677-3",
+        "target": 20,
+        "pidParameters": {
+          "updateRate": 10,
+          "switchMargin": 0.5,
+          "invertOutput": false,
+          "p": 1,
+          "i": 0.05,
+          "iMax": 1,
+          "d": 0.5
+        }
       }
     }
   ]

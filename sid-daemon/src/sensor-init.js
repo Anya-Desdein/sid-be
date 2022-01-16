@@ -5,7 +5,7 @@ const storage = new Storage();
 const fs = require("fs");
 const path = require("path");
 
-async function sensorInit(deviceConfig) {
+async function sensorInit(deviceConfig, controllerConfig) {
 
   const content = fs.readFileSync(path.resolve(__dirname, "..", "app-config.json"));
 
@@ -26,11 +26,16 @@ async function sensorInit(deviceConfig) {
     }
   });
 
-  outputDevices.forEach(async ({id, displayName, deviceData}) => {
+  outputDevices.forEach(async ({id, displayName, deviceData, controllerId, controllerData}) => {
     try {
       console.log("Output device:", id);
       deviceConfig.set(id, deviceData);
-      await storage.addOutputDevice(id, displayName);
+      controllerConfig.set(id, {
+        deviceId: id, 
+        controllerId,
+        controllerData
+      });
+      await storage.addOutputDevice(id, displayName, controllerId || null, controllerData || null, true);
       console.log("Added new output device:", id);
     }catch(e) {
       if(!e.alreadyExistsError) {

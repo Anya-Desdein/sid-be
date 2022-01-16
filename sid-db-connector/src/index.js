@@ -49,6 +49,20 @@ class Storage {
     return rows;
   }
 
+  async getSensorValue(id) {
+    if(typeof id !== "string" || !id) {
+      throw "getSensorId requires a single ID";
+    }
+
+    const { rows } = await this.pool.query(
+      `SELECT "latestValue" FROM sensors WHERE id = $1`,
+      [ id ]
+    );
+
+    if(!rows || !rows.length) return null;
+    return rows[0].latestValue;
+  }
+
   async addSensor(sensorId, type, displayName) {
     this.validateSensorIdFormat(sensorId);
 
@@ -68,22 +82,51 @@ class Storage {
     }
   }
 
-  async addOutputDevice(deviceId, displayName) {
+  async addOutputDevice(deviceId, displayName, controllerId = null, controllerData = null, allowOverwrite = false) {
     this.validateSensorIdFormat(deviceId);
 
+    let overwrite = false;
     if(await this.checkDeviceIdExists(deviceId)) {
-      const err = new Error('Device already exists: ' + deviceId);
-      err.alreadyExistsError = true;
-      throw err;
+      if(allowOverwrite) {
+        overwrite = true;
+      }else{
+        const err = new Error('Device already exists: ' + deviceId);
+        err.alreadyExistsError = true;
+        throw err;
+      }
     }
-    
-    const { rowCount: insertRowCount } = await this.pool.query(
-      `INSERT INTO output_devices(id, "displayName") VALUES ($1, $2)`,
-      [ deviceId, displayName ]
-    );
 
-    if(insertRowCount === 0) {
-      throw new Error("Could not create sensor with id: " + deviceId);
+    if(overwrite) {
+      const [ oldEntry ] = await this.getDeviceList([deviceId]);
+      if(!oldEntry) throw 'Old entry does not exist';
+
+      const controllerIdChanged = oldEntry.controllerId !== controllerId;
+
+      const { rowCount } = await this.pool.query(
+        `UPDATE output_devices 
+        SET "displayName" = $2, "controllerId" = $3, "controllerData" = $4 
+        WHERE "id" = $1`,
+        [ 
+          deviceId, 
+          displayName, 
+          controllerId, 
+          // update controllerData only if controller id changes
+          controllerIdChanged ? controllerData : oldEntry.controllerData 
+        ]
+      );
+  
+      if(rowCount === 0) {
+        throw new Error("Could not update sensor with id: " + deviceId);
+      }
+    }else{
+      const { rowCount } = await this.pool.query(
+        `INSERT INTO output_devices(id, "displayName", "controllerId", "controllerData") VALUES ($1, $2, $3, $4)`,
+        [ deviceId, displayName, controllerId, controllerData ]
+      );
+  
+      if(rowCount === 0) {
+        throw new Error("Could not create sensor with id: " + deviceId);
+      }
     }
   }
 
@@ -172,19 +215,33 @@ class Storage {
     return rows;
   }
 
-  async getDeviceList() {
+  async getDeviceList(idList) {
+    const ignoreIdList = !idList || !idList.length;
+
     const { rows } = await this.pool.query(
-      `SELECT "id", "displayName", "currentState", "overrideState" FROM output_devices`
+      `SELECT "id", "controllerId", "controllerData", "displayName", "currentState", "overrideState" FROM output_devices
+        WHERE id = ANY($1::character varying[]) OR $2 IS TRUE`,
+      [ idList, ignoreIdList ]
     );
     return rows;
   }
-
+  
   async setDeviceStatus(sensorId, parsedState) {
-    if(!await this.checkSensorIdExists(sensorId)) {
-      throw new Error("Given sensorId does not exist in database: " + String(sensorId));
+    if(!await this.checkDeviceIdExists(sensorId)) {
+      throw new Error("Given deviceId does not exist in database: " + String(sensorId));
     }
     await this.pool.query(
       `UPDATE output_devices SET "overrideState" = $2 WHERE "id" = $1`,
+      [ sensorId, parsedState ]
+    );
+  }
+
+  async setDeviceCurrentState(sensorId, parsedState) {
+    if(!await this.checkDeviceIdExists(sensorId)) {
+      throw new Error("Given deviceId does not exist in database: " + String(sensorId));
+    }
+    await this.pool.query(
+      `UPDATE output_devices SET "currentState" = $2 WHERE "id" = $1`,
       [ sensorId, parsedState ]
     );
   }

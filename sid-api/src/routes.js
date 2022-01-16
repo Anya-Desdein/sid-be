@@ -65,8 +65,10 @@ module.exports = app => {
     })
   }));
 
-  app.get('/api/get-device-list', errorsHandled(async (req, res) => {
-    const devices = await storage.getDeviceList();
+  app.get('/api/get-device-list/:sensorIds?', errorsHandled(async (req, res) => {
+    const { sensorIds } = req.params;
+    const sensorIdsArray = sensorIds ? sensorIds.split(",") : [];
+    const devices = await storage.getDeviceList(sensorIdsArray);
     res.json({
       devices,
     });

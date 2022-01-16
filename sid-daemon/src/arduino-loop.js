@@ -9,6 +9,7 @@ const latestHistoryTimes = new Map();
 const sensorHubEndpointUrl = process.env.SENSOR_HUB_URL;
 if(!sensorHubEndpointUrl) throw 'SENSOR_HUB_URL environment variable not set!';
 
+
 async function arduinoLoop() {
   const { data: sensors } = await axios.get(sensorHubEndpointUrl);
   const currentMinute = Math.floor((new Date()).getTime()/1000/60);
@@ -34,7 +35,7 @@ async function arduinoLoop() {
       }
     });
 
-  console.log(sensors);
+  // console.log(sensors);
 }
 
 module.exports = arduinoLoop;
