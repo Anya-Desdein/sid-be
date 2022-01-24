@@ -3,36 +3,39 @@
     {
       "id": "14905677-3",
       "type": "TEMP",
-      "displayName": "Temp1Room1"
+      "displayName": "Temperature1 Room1"
     },
     {
       "id": "14905677-4",
       "type": "HUMI",
-      "displayName": "Hum1Room1"
+      "displayName": "Humidity1 Room1"
     }
   ],
 
   "outputDevices": [
     {
       "id": "PLUG-1",
-      "displayName": "Heater Bedroom",
+      "displayName": "Heater1 Room1",
       "deviceData": {
         "driver": "hw-connector-tapo",
-        "address": "192.168.xxxx",
-        "username": "xxxxx",
-        "password": "xxxxx"
+        "address": "192.168.1.10",
+        "username": "heavelyn1999@gmail.com",
+        "password": "mushBerry"
       },
-      "controllerId": "plug1-room1temp-210616012022",
+      "controllerId": "plug1-room1temp-210423012022",
       "controllerData": {
         "controller": "pid",
         "sensor": "14905677-3",
-        "target": 20,
+        "target": 25,
+        "targetMin": 0,
+        "targetMax": 40,
         "pidParameters": {
-          "updateRate": 10,
+          "updateRate": 15,
           "switchMargin": 0.5,
           "invertOutput": false,
           "p": 1,
-          "i": 0.05,
+          "iUpdateRate": 0.1,
+          "i": 0.2,
           "iMax": 1,
           "d": 0.5
         }

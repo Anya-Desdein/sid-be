@@ -7,12 +7,13 @@ class PidController {
     this.deviceId = deviceId;
     this.sensorId = controllerData.sensor;
     this.targetValue = controllerData.target;
-    const { p, i, d, iMax, switchMargin, invertOutput, updateRate } = controllerData.pidParameters;
+    const { p, i, d, iMax, iUpdateRate, switchMargin, invertOutput, updateRate } = controllerData.pidParameters;
     if(typeof updateRate !== "number" || !(updateRate > 0)) {
       throw "updateRate must be defined";
     }
     this.pid = { p, i, d };
     this.iMax = iMax;
+    this.iUpdateRate = iUpdateRate;
     this.switchMargin = switchMargin;
     this.invertOutput = invertOutput;
 
@@ -32,30 +33,43 @@ class PidController {
     }
   }
 
+  // https://en.wikipedia.org/wiki/PID_controller#Pseudocode
+  /*
+  
+   error := setpoint − measured_value
+   proportional := error;
+   integral := integral + error × dt
+   derivative := (error − previous_error) / dt
+   output := Kp × proportional + Ki × integral + Kd × derivative
+   previous_error := error
+   */
   async loop() {
     const currentValue = await storage.getSensorValue(this.sensorId);
+    if(currentValue == null) {
+      throw "Cannot get sensor value for " + this.sensorId;
+    }
 
-    const { previousError, pid, iMax, switchMargin, invertOutput, targetValue } = this;
-    const error = (currentValue - targetValue);
+    const { previousError, pid, iMax, iUpdateRate, switchMargin, invertOutput, targetValue } = this;
+    const error = targetValue - currentValue;
 
-    const p = error * pid.p;
+    const p = error;
     
-    this.errorSum += error;
+    this.errorSum += error * iUpdateRate;
     if(this.errorSum > iMax) this.errorSum = iMax;
     if(this.errorSum < -iMax) this.errorSum = -iMax;
 
-    const i = this.errorSum * pid.i;
+    const i = this.errorSum;
 
     let d = 0;
     if(previousError != null) {
-      const errorChange = error - previousError;
-      d = -errorChange * pid.d;
+      d = error - previousError;
     }
 
+    const pidValue = p * pid.p + i * pid.i + d * pid.d;
 
-    const pidValue = p + i + d;
+    this.previousError = error;
     
-    console.log(`PID value P=${p.toPrecision(3)} I=${i.toPrecision(3)} D=${d.toPrecision(3)} PID=${pidValue.toPrecision(3)}`);
+    console.log(`PID target=${targetValue} currentValue=${currentValue} value P=${p.toPrecision(3)} I=${i.toPrecision(3)} D=${d.toPrecision(3)} PID=${pidValue.toPrecision(3)}`);
 
     if(pidValue < -switchMargin) {
       await this.setOutputState(!!invertOutput);

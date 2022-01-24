@@ -91,4 +91,24 @@ module.exports = app => {
       res.json({ error: String(e) });
     }
   }));
+
+  app.post('/api/set-device-config/:sensorId/:config', errorsHandled(async (req, res) => {
+    const { sensorId, config } = req.params;
+    if(!config || typeof config !== "string") {
+      return res.json({ error: 'Invalid "config" parameter' });
+    }
+    try {
+      const parsed = JSON.parse(config);
+      if(typeof parsed !== "object") throw "Not an object";
+    }catch(e) {
+      return res.json({ error: 'Invalid "config" parameter, has to be a valid JSON object.' });
+    }
+
+    try {
+      await storage.updateOutputDeviceControllerDate(sensorId, config);
+      res.json({ ok: true });
+    }catch(e) {
+      res.json({ error: String(e) });
+    }
+  }));
 };

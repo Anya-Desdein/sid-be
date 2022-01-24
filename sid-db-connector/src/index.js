@@ -130,6 +130,25 @@ class Storage {
     }
   }
 
+
+  async updateOutputDeviceControllerDate(deviceId, controllerData = null) {
+    this.validateSensorIdFormat(deviceId);
+
+    if(!await this.checkDeviceIdExists(deviceId)) {
+      throw new Error('Device does not exist: ' + deviceId);
+    }
+
+    const { rowCount } = await this.pool.query(
+      `UPDATE output_devices SET "controllerData" = $2 WHERE "id" = $1`,
+      [ deviceId, controllerData ]
+    );
+
+    if(rowCount === 0) {
+      throw new Error("Could not update sensor with id: " + deviceId);
+    }
+  }
+
+
   async addSensorValue(sensorId, value, addHistoryRecord = false) {
     this.validateSensorIdFormat(sensorId);
     

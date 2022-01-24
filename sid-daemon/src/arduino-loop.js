@@ -11,7 +11,28 @@ if(!sensorHubEndpointUrl) throw 'SENSOR_HUB_URL environment variable not set!';
 
 
 async function arduinoLoop() {
-  const { data: sensors } = await axios.get(sensorHubEndpointUrl);
+  let sensors;
+  // todo: cleanup
+  try {
+    const { data } = await axios.get(sensorHubEndpointUrl);
+    sensors = data;
+  }catch(e) {
+    //retry
+    try {
+      await new Promise(r => setTimeout(r, 500));
+      const { data } = await axios.get(sensorHubEndpointUrl);
+      sensors = data;
+    }catch(e) {
+      //retry
+      try {
+        await new Promise(r => setTimeout(r, 500));
+        const { data } = await axios.get(sensorHubEndpointUrl);
+        sensors = data;
+      }catch(e) {
+        console.log("cannot get sensor data after 3 attempts.", e);
+      }
+    }
+  }
   const currentMinute = Math.floor((new Date()).getTime()/1000/60);
 
   sensors.forEach(sensor => {
